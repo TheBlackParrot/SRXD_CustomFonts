@@ -11,6 +11,8 @@ public partial class Plugin
 {
     internal static ConfigEntry<string> FontFamily = null!;
     internal static ConfigEntry<string> FontWeight = null!;
+    
+    internal static ConfigEntry<bool> DisableItalics = null!;
 
     private void RegisterConfigEntries()
     {
@@ -18,6 +20,9 @@ public partial class Plugin
             "Name of the custom font");
         FontWeight = Config.Bind("Font", "FontWeight", "Bold",
             "Weight of the custom font");
+
+        DisableItalics = Config.Bind("Tweaks", "DisableItalics", false,
+            "Forcibly disable italics on all text elements");
     }
     
     private static void CreateModPage()
@@ -26,6 +31,8 @@ public partial class Plugin
         TranslationHelper.AddTranslation($"{nameof(CustomFonts)}_GitHubButtonText", $"{nameof(CustomFonts)} Releases (GitHub)");
         TranslationHelper.AddTranslation($"{nameof(CustomFonts)}_{nameof(FontFamily)}", "Font family");
         TranslationHelper.AddTranslation($"{nameof(CustomFonts)}_{nameof(FontWeight)}", "Font weight");
+        
+        TranslationHelper.AddTranslation($"{nameof(CustomFonts)}_{nameof(DisableItalics)}", "Forcibly disable italics");
         
         CustomPage rootModPage = UIHelper.CreateCustomPage("ModSettings");
         rootModPage.OnPageLoad += RootModPageOnPageLoad;
@@ -94,6 +101,16 @@ public partial class Plugin
             });
         });
         fontWeightInput.InputField.SetText(FontWeight.Value);
+        #endregion
+
+        #region DisableItalics
+        CustomGroup disableItalicsGroup = UIHelper.CreateGroup(modGroup, "DisableItalicsGroup");
+        disableItalicsGroup.LayoutDirection = Axis.Horizontal;
+        UIHelper.CreateSmallToggle(disableItalicsGroup, nameof(DisableItalics),
+            $"{nameof(CustomFonts)}_{nameof(DisableItalics)}", DisableItalics.Value, value =>
+            {
+                DisableItalics.Value = value;
+            });
         #endregion
 
         UIHelper.CreateButton(modGroup, "OpenCustomFontsRepositoryButton", "CustomFonts_GitHubButtonText", () =>

@@ -26,7 +26,7 @@ internal abstract class PatcherFunctions
         instance.font = CurrentFont?.font;
         
         // remove italics (i hate italics)
-        if ((instance.fontStyle & FontStyles.Italic) == FontStyles.Italic)
+        if ((instance.fontStyle & FontStyles.Italic) == FontStyles.Italic && Plugin.DisableItalics.Value)
         {
             instance.fontStyle ^= FontStyles.Italic;
         }
