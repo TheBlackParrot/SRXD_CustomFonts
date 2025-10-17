@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using BepInEx;
 using BepInEx.Logging;
+using CustomFonts.Patches;
 using HarmonyLib;
 using TMPro;
 using UnityEngine;
@@ -26,14 +27,11 @@ namespace CustomFonts;
 */
 
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
-public class Plugin : BaseUnityPlugin
+public partial class Plugin : BaseUnityPlugin
 {
     internal static ManualLogSource Log = null!;
     private static Harmony _harmony = null!;
     private static string DataPath => Path.Combine(Paths.ConfigPath, nameof(CustomFonts));
-
-    internal static bool FontsLoaded;
-    internal static readonly List<string> LoadedFonts = [];
 
     private void Awake()
     {
@@ -43,6 +41,9 @@ public class Plugin : BaseUnityPlugin
         {
             Directory.CreateDirectory(DataPath);
         }
+        
+        RegisterConfigEntries();
+        CreateModPage();
 
         _harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
 
@@ -55,7 +56,9 @@ public class Plugin : BaseUnityPlugin
         {
             try
             {
-                await FirstTimeFontLoad();
+                await Awaitable.MainThreadAsync();
+                await LoadCustomFont();
+                _harmony.PatchAll();
             }
             catch (Exception e)
             {
@@ -112,13 +115,28 @@ public class Plugin : BaseUnityPlugin
         return font;
     }
 
-    private static async Task FirstTimeFontLoad()
+    private static async Task LoadCustomFont()
     {
-        if (FontsLoaded)
+        string fullFontName = $"{FontFamily.Value}-{FontWeight.Value}";
+        
+        while (_fontAssetSystem == null)
         {
-            return;
+            _fontAssetSystem = GameSystemSingleton<FontAssetSystem, FontAssetSystemSettings>.Instance;
+            await Awaitable.NextFrameAsync();
         }
 
+        // no, please, take your time
+        while (!_fontAssetSystem.HasAppliedSettings)
+        {
+            await Awaitable.NextFrameAsync();
+        }
+
+        if (_fontAssetSystem.Fonts.ContainsKey(fullFontName))
+        {
+            // already loaded, don't bother
+            return;
+        }
+        
         // i specifically only want this particular patch to run once, since it works around a missing shader issue in base game
         // just get the stuff now
         MethodInfo? originalAssetMethod = typeof(TMP_FontAsset)
@@ -128,14 +146,21 @@ public class Plugin : BaseUnityPlugin
             Log.LogInfo("originalMethod null");
             return;
         }
+        MethodInfo? newAssetMethod = typeof(FixCreateFontAssetInstance)
+            .GetMethod(nameof(FixCreateFontAssetInstance.CreateFontAssetInstance), BindingFlags.NonPublic | BindingFlags.Static)?.GetBaseDefinition();
+        if (newAssetMethod == null)
+        {
+            Log.LogInfo("newMethod null");
+            return;
+        }
 
-        _harmony.PatchAll();
+        _harmony.Patch(originalAssetMethod, new HarmonyMethod(newAssetMethod));
         
         TMP_FontAsset? loadedFontAsset = null;
         await Awaitable.MainThreadAsync();
         try
         {
-            loadedFontAsset = await LoadSystemFont("Oxanium", "Medium");
+            loadedFontAsset = await LoadSystemFont(FontFamily.Value, FontWeight.Value);
         }
         catch (Exception e)
         {
@@ -152,27 +177,14 @@ public class Plugin : BaseUnityPlugin
         FontAssetSystemSettings.FontForName ffn = new()
         {
             font = loadedFontAsset,
-            name = "Oxanium-Medium"
+            name = fullFontName
         };
         ffn.Init();
         ffn._numberMaterials = new FontAssetSystemSettings.FontForName.NumberMaterials(ffn);
-
-        while (_fontAssetSystem == null)
-        {
-            _fontAssetSystem = GameSystemSingleton<FontAssetSystem, FontAssetSystemSettings>.Instance;
-            await Awaitable.NextFrameAsync();
-        }
-
-        // no, please, take your time
-        while (!_fontAssetSystem.HasAppliedSettings)
-        {
-            await Awaitable.NextFrameAsync();
-        }
-            
+        
         FontAssetSystem.AddFont(ffn, _fontAssetSystem.Fonts, ref _fontAssetSystem.defaultFont);
         
         Log.LogInfo("Font loading complete");
-        FontsLoaded = true;
         
         // ok we no longer need the workaround :)
         _harmony.Unpatch(originalAssetMethod, HarmonyPatchType.Prefix, MyPluginInfo.PLUGIN_GUID);

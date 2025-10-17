@@ -13,11 +13,11 @@ namespace CustomFonts.Patches;
 // and this is what TMP's trying to use for a material shader when generating font assets
 // idk, this is ugly. just cleaned up with rider de-comp'd
 
-[HarmonyPatch]
+//[HarmonyPatch]
 internal class FixCreateFontAssetInstance
 {
-    [HarmonyPatch(typeof(TMP_FontAsset), "CreateFontAssetInstance")]
-    [HarmonyPrefix]
+    /*[HarmonyPatch(typeof(TMP_FontAsset), "CreateFontAssetInstance")]
+    [HarmonyPrefix]*/
     [SuppressMessage("ReSharper", "BitwiseOperatorOnEnumWithoutFlags")]
     internal static bool CreateFontAssetInstance(Font font, int atlasPadding, GlyphRenderMode renderMode,
         int atlasWidth, int atlasHeight, AtlasPopulationMode atlasPopulationMode, bool enableMultiAtlasSupport,

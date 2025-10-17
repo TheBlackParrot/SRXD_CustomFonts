@@ -8,15 +8,11 @@ internal abstract class PatcherFunctions
     private static FontAssetSystem? _fontAssetSystemInstance;
     public static void Patch(TMP_Text instance)
     {
-        if (!Plugin.FontsLoaded)
-        {
-            return;
-        }
-        
         // this (should) exist by the time this is called for the first time
         _fontAssetSystemInstance ??= GameSystemSingleton<FontAssetSystem, FontAssetSystemSettings>.Instance;
         
-        FontAssetSystemSettings.FontForName? fontForName = _fontAssetSystemInstance?.GetFontForName("Oxanium-Medium", false);
+        FontAssetSystemSettings.FontForName? fontForName =
+            _fontAssetSystemInstance?.GetFontForName($"{Plugin.FontFamily.Value}-{Plugin.FontWeight.Value}", false);
         instance.font = fontForName?.font;
         
         // remove italics (i hate italics)
