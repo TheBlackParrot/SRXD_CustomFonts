@@ -188,9 +188,11 @@ public partial class Plugin : BaseUnityPlugin
             name = fullFontName
         };
         ffn.Init();
-        ffn._numberMaterials = new FontAssetSystemSettings.FontForName.NumberMaterials(ffn);
+        ffn.GetNumberMaterials();
         
         FontAssetSystem.AddFont(ffn, _fontAssetSystem.Fonts, ref _fontAssetSystem.defaultFont);
+
+        PatcherFunctions.UpdateCurrentFont();
         
         Log.LogInfo("Font loading complete");
         

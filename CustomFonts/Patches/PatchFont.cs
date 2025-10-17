@@ -6,14 +6,24 @@ namespace CustomFonts.Patches;
 internal abstract class PatcherFunctions
 {
     private static FontAssetSystem? _fontAssetSystemInstance;
-    public static void Patch(TMP_Text instance)
+    internal static FontAssetSystemSettings.FontForName? CurrentFont;
+
+    public static void UpdateCurrentFont()
     {
         // this (should) exist by the time this is called for the first time
         _fontAssetSystemInstance ??= GameSystemSingleton<FontAssetSystem, FontAssetSystemSettings>.Instance;
         
-        FontAssetSystemSettings.FontForName? fontForName =
-            _fontAssetSystemInstance?.GetFontForName($"{Plugin.FontFamily.Value}-{Plugin.FontWeight.Value}", false);
-        instance.font = fontForName?.font;
+        CurrentFont = _fontAssetSystemInstance?.GetFontForName($"{Plugin.FontFamily.Value}-{Plugin.FontWeight.Value}", false);
+    }
+    
+    public static void Patch(TMP_Text instance)
+    {
+        if (CurrentFont == null)
+        {
+            UpdateCurrentFont();
+        }
+        
+        instance.font = CurrentFont?.font;
         
         // remove italics (i hate italics)
         if ((instance.fontStyle & FontStyles.Italic) == FontStyles.Italic)
@@ -52,18 +62,4 @@ public static class Patches
         PatcherFunctions.Patch(__instance);
         return true;
     }
-    
-    // uncommenting this patch will garble the HUD numbers
-    // also it's very aggressive
-    /*
-    [HarmonyPatch(typeof(TextNumber), nameof(TextNumber.Update))]
-    [HarmonyPrefix]
-    [HarmonyPriority(int.MinValue)]
-    // ReSharper disable once InconsistentNaming
-    internal static bool TextNumber_fontGetter(ref string ___font)
-    {
-        ___font = Plugin.LoadedFonts[0];
-        return true;
-    }
-    */
 }
