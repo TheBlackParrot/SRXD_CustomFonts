@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -8,9 +6,9 @@ using BepInEx;
 using BepInEx.Logging;
 using CustomFonts.Patches;
 using HarmonyLib;
+using SpinCore.Translation;
 using TMPro;
 using UnityEngine;
-using UnityEngine.TextCore.LowLevel;
 
 namespace CustomFonts;
 
@@ -27,24 +25,26 @@ namespace CustomFonts;
 */
 
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
+[BepInDependency("srxd.raoul1808.spincore", "1.1.2")]
 public partial class Plugin : BaseUnityPlugin
 {
     internal static ManualLogSource Log = null!;
     private static Harmony _harmony = null!;
-    private static string DataPath => Path.Combine(Paths.ConfigPath, nameof(CustomFonts));
 
     private void Awake()
     {
         Log = Logger;
-
-        if (!Directory.Exists(DataPath))
-        {
-            Directory.CreateDirectory(DataPath);
-        }
+        
+        TranslationHelper.AddTranslation($"{nameof(CustomFonts)}_ModName", nameof(CustomFonts));
+        TranslationHelper.AddTranslation($"{nameof(CustomFonts)}_GitHubButtonText", $"{nameof(CustomFonts)} Releases (GitHub)");
+        TranslationHelper.AddTranslation($"{nameof(CustomFonts)}_ApplyButtonText", "Apply Font");
+        TranslationHelper.AddTranslation($"{nameof(CustomFonts)}_{nameof(FontFamily)}", "Font family");
+        TranslationHelper.AddTranslation($"{nameof(CustomFonts)}_{nameof(FontWeight)}", "Font weight");
+        TranslationHelper.AddTranslation($"{nameof(CustomFonts)}_{nameof(DisableItalics)}", "Forcibly disable italics");
         
         RegisterConfigEntries();
         CreateModPage();
-
+        
         _harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
 
         Log.LogInfo("Plugin loaded");
