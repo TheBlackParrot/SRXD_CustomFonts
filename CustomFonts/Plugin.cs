@@ -95,7 +95,15 @@ public partial class Plugin : BaseUnityPlugin
         
         Log.LogInfo("Creating font asset...");
         
-        TMP_FontAsset font = TMP_FontAsset.CreateFontAsset(family, weight, settings.Value.pointSize);
+        TMP_FontAsset? font = TMP_FontAsset.CreateFontAsset(family, weight, settings.Value.pointSize);
+        if (font == null)
+        {
+            Log.LogWarning($"Failed to load font: {family} ({weight})");
+            font = TMP_FontAsset.CreateFontAsset("Arial", "Regular", settings.Value.pointSize);
+            
+            family = "Arial";
+            weight = "Regular";
+        }
         font.name = $"{family}-{weight}";
         
         while (_fontAssetSystem == null)
