@@ -16,7 +16,7 @@ internal abstract class PatcherFunctions
         // this (should) exist by the time this is called for the first time
         _fontAssetSystemInstance ??= GameSystemSingleton<FontAssetSystem, FontAssetSystemSettings>.Instance;
         
-        FontAssetSystemSettings.FontForName? fontForName = _fontAssetSystemInstance?.GetFontForName(Plugin.LoadedFonts[0], false);
+        FontAssetSystemSettings.FontForName? fontForName = _fontAssetSystemInstance?.GetFontForName("Oxanium-Medium", false);
         instance.font = fontForName?.font;
         
         // remove italics (i hate italics)
