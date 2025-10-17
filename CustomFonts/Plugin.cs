@@ -12,18 +12,6 @@ using UnityEngine;
 
 namespace CustomFonts;
 
-/*
- a lot of this is probably a combination of:
- - spicy
- - bad
- - ugly
- - disgusting
- - inefficient
- - what
- 
- take your pick
-*/
-
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 [BepInDependency("srxd.raoul1808.spincore", "1.1.2")]
 public partial class Plugin : BaseUnityPlugin
@@ -105,14 +93,8 @@ public partial class Plugin : BaseUnityPlugin
             weight = "Regular";
         }
         font.name = $"{family}-{weight}";
-        
-        while (_fontAssetSystem == null)
-        {
-            _fontAssetSystem = GameSystemSingleton<FontAssetSystem, FontAssetSystemSettings>.Instance;
-            await Awaitable.NextFrameAsync();
-        }
 
-        while (_fontAssetSystem.defaultEmpty == null)
+        while (_fontAssetSystem?.defaultEmpty == null)
         {
             await Awaitable.NextFrameAsync();
         }
@@ -123,6 +105,10 @@ public partial class Plugin : BaseUnityPlugin
         return font;
     }
 
+    private static readonly MethodInfo? OriginalAssetMethod = typeof(TMP_FontAsset)
+        .GetMethod(nameof(TMP_FontAsset.CreateFontAssetInstance), BindingFlags.NonPublic | BindingFlags.Static)?.GetBaseDefinition();
+    private static readonly MethodInfo? NewAssetMethod = typeof(FixCreateFontAssetInstance)
+        .GetMethod(nameof(FixCreateFontAssetInstance.CreateFontAssetInstance), BindingFlags.NonPublic | BindingFlags.Static)?.GetBaseDefinition();
     private static async Task LoadCustomFont()
     {
         string fullFontName = $"{FontFamily.Value}-{FontWeight.Value}";
@@ -146,23 +132,18 @@ public partial class Plugin : BaseUnityPlugin
         }
         
         // i specifically only want this particular patch to run once, since it works around a missing shader issue in base game
-        // just get the stuff now
-        MethodInfo? originalAssetMethod = typeof(TMP_FontAsset)
-            .GetMethod(nameof(TMP_FontAsset.CreateFontAssetInstance), BindingFlags.NonPublic | BindingFlags.Static)?.GetBaseDefinition();
-        if (originalAssetMethod == null)
+        if (OriginalAssetMethod == null)
         {
             Log.LogInfo("originalMethod null");
             return;
         }
-        MethodInfo? newAssetMethod = typeof(FixCreateFontAssetInstance)
-            .GetMethod(nameof(FixCreateFontAssetInstance.CreateFontAssetInstance), BindingFlags.NonPublic | BindingFlags.Static)?.GetBaseDefinition();
-        if (newAssetMethod == null)
+        if (NewAssetMethod == null)
         {
             Log.LogInfo("newMethod null");
             return;
         }
 
-        _harmony.Patch(originalAssetMethod, new HarmonyMethod(newAssetMethod));
+        _harmony.Patch(OriginalAssetMethod, new HarmonyMethod(NewAssetMethod));
         
         TMP_FontAsset? loadedFontAsset = null;
         await Awaitable.MainThreadAsync();
@@ -197,6 +178,6 @@ public partial class Plugin : BaseUnityPlugin
         Log.LogInfo("Font loading complete");
         
         // ok we no longer need the workaround :)
-        _harmony.Unpatch(originalAssetMethod, HarmonyPatchType.Prefix, MyPluginInfo.PLUGIN_GUID);
+        _harmony.Unpatch(OriginalAssetMethod, HarmonyPatchType.Prefix, MyPluginInfo.PLUGIN_GUID);
     }
 }

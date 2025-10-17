@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using HarmonyLib;
 using TMPro;
 using UnityEngine;
 using UnityEngine.TextCore;
@@ -11,13 +10,12 @@ namespace CustomFonts.Patches;
 
 // for whatever reason i am too lazy to figure out a proper solution for, ShaderUtilities.ShaderRef_MobileSDF returns null
 // and this is what TMP's trying to use for a material shader when generating font assets
-// idk, this is ugly. just cleaned up with rider de-comp'd
+// idk, this is ugly. just cleaned up what rider de-comp'd
 
-//[HarmonyPatch]
+// a transpiler method would probably be better suited here but that's outside of my ability to program. that shit scary
+
 internal class FixCreateFontAssetInstance
 {
-    /*[HarmonyPatch(typeof(TMP_FontAsset), "CreateFontAssetInstance")]
-    [HarmonyPrefix]*/
     [SuppressMessage("ReSharper", "BitwiseOperatorOnEnumWithoutFlags")]
     internal static bool CreateFontAssetInstance(Font font, int atlasPadding, GlyphRenderMode renderMode,
         int atlasWidth, int atlasHeight, AtlasPopulationMode atlasPopulationMode, bool enableMultiAtlasSupport,
@@ -49,6 +47,7 @@ internal class FixCreateFontAssetInstance
         if ((renderMode & (GlyphRenderMode) 16) == (GlyphRenderMode) 16)
         {
             num = 0;
+            // ReSharper disable once ShaderLabShaderReferenceNotResolved (we don't hit this condition anyways)
             Material material = textureFormat != TextureFormat.Alpha8 ? new Material(Shader.Find("TextMeshPro/Sprite")) : new Material(foundShader);
             material.SetTexture(ShaderUtilities.ID_MainTex, texture2D);
             material.SetFloat(ShaderUtilities.ID_TextureWidth, atlasWidth);

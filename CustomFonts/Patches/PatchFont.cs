@@ -6,14 +6,14 @@ namespace CustomFonts.Patches;
 internal abstract class PatcherFunctions
 {
     private static FontAssetSystem? _fontAssetSystemInstance;
-    internal static FontAssetSystemSettings.FontForName? CurrentFont;
+    private static FontAssetSystemSettings.FontForName? _currentFont;
 
     public static void UpdateCurrentFont()
     {
         // this (should) exist by the time this is called for the first time
         _fontAssetSystemInstance ??= GameSystemSingleton<FontAssetSystem, FontAssetSystemSettings>.Instance;
         
-        CurrentFont = _fontAssetSystemInstance?.GetFontForName($"{Plugin.FontFamily.Value}-{Plugin.FontWeight.Value}", false);
+        _currentFont = _fontAssetSystemInstance?.GetFontForName($"{Plugin.FontFamily.Value}-{Plugin.FontWeight.Value}", false);
     }
     
     public static void Patch(TMP_Text instance)
@@ -23,12 +23,12 @@ internal abstract class PatcherFunctions
             return;
         }
         
-        if (CurrentFont == null)
+        if (_currentFont == null)
         {
             UpdateCurrentFont();
         }
         
-        instance.font = CurrentFont?.font;
+        instance.font = _currentFont?.font;
         
         // remove italics (i hate italics)
         if ((instance.fontStyle & FontStyles.Italic) == FontStyles.Italic && Plugin.DisableItalics.Value)
@@ -54,7 +54,6 @@ public static class Patches
         }
         
         PatcherFunctions.Patch(__instance);
-        
         return true;
     }
 
