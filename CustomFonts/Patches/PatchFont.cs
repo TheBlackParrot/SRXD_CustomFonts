@@ -27,9 +27,14 @@ internal abstract class PatcherFunctions
         {
             UpdateCurrentFont();
         }
-        
+
         instance.font = _currentFont?.font;
-        
+        if (instance is CustomTextMeshProUGUI ugui)
+        {
+            ugui.FontName = _currentFont?.name;
+            ugui.UpdateFontAsset();
+        }
+
         // remove italics (i hate italics)
         if ((instance.fontStyle & FontStyles.Italic) == FontStyles.Italic && Plugin.DisableItalics.Value)
         {
@@ -62,6 +67,16 @@ public static class Patches
     [HarmonyPriority(int.MinValue)]
     // ReSharper disable once InconsistentNaming
     internal static bool TextMeshProUGUI_OnEnable(TextMeshProUGUI __instance)
+    {
+        PatcherFunctions.Patch(__instance);
+        return true;
+    }
+    
+    [HarmonyPatch(typeof(CustomTextMeshProUGUI), "OnEnable")]
+    [HarmonyPrefix]
+    [HarmonyPriority(int.MinValue)]
+    // ReSharper disable once InconsistentNaming
+    internal static bool CustomTextMeshProUGUI_OnEnable(CustomTextMeshProUGUI __instance)
     {
         PatcherFunctions.Patch(__instance);
         return true;
