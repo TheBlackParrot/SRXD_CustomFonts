@@ -18,7 +18,7 @@ internal abstract class PatcherFunctions
     
     public static void Patch(TMP_Text instance)
     {
-        if (instance is CustomTextMeshPro { fontName: "DefaultHud3D" or "NumberHudWheel" })
+        if (instance is CustomTextMeshPro { fontName: "DefaultHud3D" or "NumberHudWheel" or "Default_Outline_On_Top" })
         {
             return;
         }
