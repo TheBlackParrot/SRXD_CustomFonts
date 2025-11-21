@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using TMPro;
@@ -22,9 +23,6 @@ internal class FixCreateFontAssetInstance
         // ReSharper disable once InconsistentNaming
         ref TMP_FontAsset __result)
     {
-        Shader foundShader = Resources.FindObjectsOfTypeAll<Shader>().First(x => x.name == "TextMeshPro/Distance Field");
-        Plugin.Log.LogInfo($"Found TextMeshPro Shader: {foundShader.name}");
-    
         TMP_FontAsset instance = ScriptableObject.CreateInstance<TMP_FontAsset>();
         instance.m_Version = "1.1.0";
         instance.faceInfo = FontEngine.GetFaceInfo();
@@ -48,7 +46,10 @@ internal class FixCreateFontAssetInstance
         {
             num = 0;
             // ReSharper disable once ShaderLabShaderReferenceNotResolved (we don't hit this condition anyways)
-            Material material = textureFormat != TextureFormat.Alpha8 ? new Material(Shader.Find("TextMeshPro/Sprite")) : new Material(foundShader);
+            Material material = textureFormat != TextureFormat.Alpha8
+                ? new Material(Shader.Find("TextMeshPro/Sprite"))
+                : new Material(Resources.FindObjectsOfTypeAll<Shader>()
+                    .First(x => x.name == "TextMeshPro/Distance Field"));
             material.SetTexture(ShaderUtilities.ID_MainTex, texture2D);
             material.SetFloat(ShaderUtilities.ID_TextureWidth, atlasWidth);
             material.SetFloat(ShaderUtilities.ID_TextureHeight, atlasHeight);
@@ -57,7 +58,19 @@ internal class FixCreateFontAssetInstance
         else
         {
             num = 1;
-            Material material = new(foundShader);
+            
+            Material material;
+            try
+            {
+                material = new Material(Resources.FindObjectsOfTypeAll<Material>()
+                    .First(x => x.name == "Montserrat-ExtraBold SDF Outline at 40 Material"));
+            }
+            catch (Exception)
+            {
+                material = new Material(Resources.FindObjectsOfTypeAll<Shader>()
+                    .First(x => x.name == "TextMeshPro/Distance Field"));
+            }
+
             material.SetTexture(ShaderUtilities.ID_MainTex, texture2D);
             material.SetFloat(ShaderUtilities.ID_TextureWidth, atlasWidth);
             material.SetFloat(ShaderUtilities.ID_TextureHeight, atlasHeight);

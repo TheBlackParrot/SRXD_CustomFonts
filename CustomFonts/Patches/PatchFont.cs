@@ -28,6 +28,11 @@ internal abstract class PatcherFunctions
             UpdateCurrentFont();
         }
 
+        if (instance.font == _currentFont?.font)
+        {
+            return;
+        }
+
         instance.font = _currentFont?.font;
         if (instance is CustomTextMeshProUGUI ugui)
         {

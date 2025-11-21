@@ -104,7 +104,7 @@ public partial class Plugin : BaseUnityPlugin
 
         return font;
     }
-
+    
     private static readonly MethodInfo? OriginalAssetMethod = typeof(TMP_FontAsset)
         .GetMethod(nameof(TMP_FontAsset.CreateFontAssetInstance), BindingFlags.NonPublic | BindingFlags.Static)?.GetBaseDefinition();
     private static readonly MethodInfo? NewAssetMethod = typeof(FixCreateFontAssetInstance)
