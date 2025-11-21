@@ -43,11 +43,6 @@ internal abstract class PatcherFunctions
             _ => _currentFont
         };
 
-        if (instance.font == wantedFont?.font)
-        {
-            return;
-        }
-
         instance.font = wantedFont?.font;
         if (instance is CustomTextMeshProUGUI ugui)
         {
@@ -56,7 +51,9 @@ internal abstract class PatcherFunctions
         }
 
         // remove italics (i hate italics)
-        if ((instance.fontStyle & FontStyles.Italic) == FontStyles.Italic && Plugin.DisableItalics.Value)
+        if ((instance.fontStyle & FontStyles.Italic) == FontStyles.Italic
+            && Plugin.DisableItalics.Value
+            && instance is not CustomTextMeshProUGUI { fontName: "Default_Outline_On_Top" }) // ignore lyrics
         {
             instance.fontStyle ^= FontStyles.Italic;
         }
