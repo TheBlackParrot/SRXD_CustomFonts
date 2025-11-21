@@ -46,6 +46,9 @@ public partial class Plugin : BaseUnityPlugin
             {
                 await Awaitable.MainThreadAsync();
                 await LoadCustomFont();
+                await LoadCustomFont("Outline at 40 Material");
+                await LoadCustomFont("Outline at 40 Material Always On Top");
+                await LoadCustomFont("Outline at 90 Material");
                 _harmony.PatchAll();
             }
             catch (Exception e)
@@ -61,9 +64,10 @@ public partial class Plugin : BaseUnityPlugin
     }
 
     private static FontAssetSystem? _fontAssetSystem;
-    private static async Task<TMP_FontAsset> LoadSystemFont(string family, string weight)
+    private static async Task<TMP_FontAsset> LoadSystemFont(string family, string weight, string? variant = null)
     {
-        Log.LogInfo($"Loading system font: {family} ({weight})");
+        FixCreateFontAssetInstance.WantedVariant = variant ?? string.Empty;
+        Log.LogInfo($"Loading system font: {family} ({weight}) (variant: {FixCreateFontAssetInstance.WantedVariant})");
         
         FontAssetCreationSettings? settings = null;
         while (settings == null)
@@ -92,7 +96,7 @@ public partial class Plugin : BaseUnityPlugin
             family = "Arial";
             weight = "Regular";
         }
-        font.name = $"{family}-{weight}";
+        font.name = $"{family}-{weight}{(variant == null ? string.Empty : $"-{FixCreateFontAssetInstance.WantedVariant}")}";
 
         while (_fontAssetSystem?.defaultEmpty == null)
         {
@@ -109,9 +113,9 @@ public partial class Plugin : BaseUnityPlugin
         .GetMethod(nameof(TMP_FontAsset.CreateFontAssetInstance), BindingFlags.NonPublic | BindingFlags.Static)?.GetBaseDefinition();
     private static readonly MethodInfo? NewAssetMethod = typeof(FixCreateFontAssetInstance)
         .GetMethod(nameof(FixCreateFontAssetInstance.CreateFontAssetInstance), BindingFlags.NonPublic | BindingFlags.Static)?.GetBaseDefinition();
-    private static async Task LoadCustomFont()
+    private static async Task LoadCustomFont(string? variant = null)
     {
-        string fullFontName = $"{FontFamily.Value}-{FontWeight.Value}";
+        string fullFontName = $"{FontFamily.Value}-{FontWeight.Value}{(variant == null ? string.Empty : $"-{variant}")}";
         
         while (_fontAssetSystem == null)
         {
@@ -149,7 +153,7 @@ public partial class Plugin : BaseUnityPlugin
         await Awaitable.MainThreadAsync();
         try
         {
-            loadedFontAsset = await LoadSystemFont(FontFamily.Value, FontWeight.Value);
+            loadedFontAsset = await LoadSystemFont(FontFamily.Value, FontWeight.Value, variant);
         }
         catch (Exception e)
         {

@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using System.Linq;
+using HarmonyLib;
 using TMPro;
 
 namespace CustomFonts.Patches;
@@ -28,15 +29,29 @@ internal abstract class PatcherFunctions
             UpdateCurrentFont();
         }
 
-        if (instance.font == _currentFont?.font)
+        if (!instance.fontSharedMaterial.name.Contains("Montserrat-ExtraBold SDF"))
+        {
+            return;
+        }
+        
+        string previousMaterialName = instance.fontSharedMaterial.name;
+        FontAssetSystemSettings.FontForName? wantedFont = previousMaterialName switch
+        {
+            "Montserrat-ExtraBold SDF Outline at 40 Material" => _fontAssetSystemInstance?.GetFontForName($"{Plugin.FontFamily.Value}-{Plugin.FontWeight.Value}-Outline at 40 Material", false),
+            "Montserrat-ExtraBold SDF Outline at 90 Material" => _fontAssetSystemInstance?.GetFontForName($"{Plugin.FontFamily.Value}-{Plugin.FontWeight.Value}-Outline at 90 Material", false),
+            "Montserrat-ExtraBold SDF Outline at 40 Material Always On Top" => _fontAssetSystemInstance?.GetFontForName($"{Plugin.FontFamily.Value}-{Plugin.FontWeight.Value}-Outline at 40 Material Always On Top", false),
+            _ => _currentFont
+        };
+
+        if (instance.font == wantedFont?.font)
         {
             return;
         }
 
-        instance.font = _currentFont?.font;
+        instance.font = wantedFont?.font;
         if (instance is CustomTextMeshProUGUI ugui)
         {
-            ugui.FontName = _currentFont?.name;
+            ugui.FontName = wantedFont?.name;
             ugui.UpdateFontAsset();
         }
 

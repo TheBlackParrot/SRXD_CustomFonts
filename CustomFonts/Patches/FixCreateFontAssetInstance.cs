@@ -17,6 +17,8 @@ namespace CustomFonts.Patches;
 
 internal class FixCreateFontAssetInstance
 {
+    internal static string WantedVariant = "Outline at 40 Material";
+    
     [SuppressMessage("ReSharper", "BitwiseOperatorOnEnumWithoutFlags")]
     internal static bool CreateFontAssetInstance(Font font, int atlasPadding, GlyphRenderMode renderMode,
         int atlasWidth, int atlasHeight, AtlasPopulationMode atlasPopulationMode, bool enableMultiAtlasSupport,
@@ -63,7 +65,17 @@ internal class FixCreateFontAssetInstance
             try
             {
                 material = new Material(Resources.FindObjectsOfTypeAll<Material>()
-                    .First(x => x.name == "Montserrat-ExtraBold SDF Outline at 40 Material"));
+                    .First(x => x.name == $"Montserrat-ExtraBold SDF {WantedVariant}"));
+
+#if DEBUG
+                foreach (Material tmp in Resources.FindObjectsOfTypeAll<Material>())
+                {
+                    if (tmp.name.Contains("Montserrat-ExtraBold SDF Outline"))
+                    {
+                        Plugin.Log.LogInfo(tmp.name);
+                    }
+                }
+#endif
             }
             catch (Exception)
             {
