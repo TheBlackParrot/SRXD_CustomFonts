@@ -8,6 +8,9 @@ internal abstract class PatcherFunctions
 {
     private static FontAssetSystem? _fontAssetSystemInstance;
     private static FontAssetSystemSettings.FontForName? _currentFont;
+    private static FontAssetSystemSettings.FontForName? _currentFontOutline40;
+    private static FontAssetSystemSettings.FontForName? _currentFontOutline90;
+    private static FontAssetSystemSettings.FontForName? _currentFontOutline40Top;
 
     public static void UpdateCurrentFont()
     {
@@ -15,6 +18,12 @@ internal abstract class PatcherFunctions
         _fontAssetSystemInstance ??= GameSystemSingleton<FontAssetSystem, FontAssetSystemSettings>.Instance;
         
         _currentFont = _fontAssetSystemInstance?.GetFontForName($"{Plugin.FontFamily.Value}-{Plugin.FontWeight.Value}", false);
+        _currentFontOutline40 =
+            _fontAssetSystemInstance?.GetFontForName($"{Plugin.FontFamily.Value}-{Plugin.FontWeight.Value}-Outline at 40 Material", false);
+        _currentFontOutline90 =
+            _fontAssetSystemInstance?.GetFontForName($"{Plugin.FontFamily.Value}-{Plugin.FontWeight.Value}-Outline at 90 Material", false);
+        _currentFontOutline40Top =
+            _fontAssetSystemInstance?.GetFontForName($"{Plugin.FontFamily.Value}-{Plugin.FontWeight.Value}-Outline at 40 Material Always On Top", false);
     }
     
     public static void Patch(TMP_Text instance)
@@ -28,18 +37,13 @@ internal abstract class PatcherFunctions
         {
             UpdateCurrentFont();
         }
-
-        if (!instance.fontSharedMaterial.name.Contains("Montserrat-ExtraBold SDF"))
-        {
-            return;
-        }
         
         string previousMaterialName = instance.fontSharedMaterial.name;
         FontAssetSystemSettings.FontForName? wantedFont = previousMaterialName switch
         {
-            "Montserrat-ExtraBold SDF Outline at 40 Material" => _fontAssetSystemInstance?.GetFontForName($"{Plugin.FontFamily.Value}-{Plugin.FontWeight.Value}-Outline at 40 Material", false),
-            "Montserrat-ExtraBold SDF Outline at 90 Material" => _fontAssetSystemInstance?.GetFontForName($"{Plugin.FontFamily.Value}-{Plugin.FontWeight.Value}-Outline at 90 Material", false),
-            "Montserrat-ExtraBold SDF Outline at 40 Material Always On Top" => _fontAssetSystemInstance?.GetFontForName($"{Plugin.FontFamily.Value}-{Plugin.FontWeight.Value}-Outline at 40 Material Always On Top", false),
+            "Montserrat-ExtraBold SDF Outline at 40 Material" => _currentFontOutline40,
+            "Montserrat-ExtraBold SDF Outline at 90 Material" => _currentFontOutline90,
+            "Montserrat-ExtraBold SDF Outline at 40 Material Always On Top" => _currentFontOutline40Top,
             _ => _currentFont
         };
 

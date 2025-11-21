@@ -63,7 +63,7 @@ public partial class Plugin
                 try
                 {
                     Log.LogInfo($"Changing font to {FontFamily.Value}-{FontWeight.Value}...");
-                    await LoadCustomFont();
+                    await LoadAllFontVariants();
                 }
                 catch (Exception e)
                 {

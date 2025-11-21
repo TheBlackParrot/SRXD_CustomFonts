@@ -38,6 +38,14 @@ public partial class Plugin : BaseUnityPlugin
         Log.LogInfo("Plugin loaded");
     }
 
+    private static async Task LoadAllFontVariants()
+    {
+        await LoadCustomFont();
+        await LoadCustomFont("Outline at 40 Material");
+        await LoadCustomFont("Outline at 40 Material Always On Top");
+        await LoadCustomFont("Outline at 90 Material");
+    }
+
     private void OnEnable()
     {
         Task.Run(async () =>
@@ -45,10 +53,7 @@ public partial class Plugin : BaseUnityPlugin
             try
             {
                 await Awaitable.MainThreadAsync();
-                await LoadCustomFont();
-                await LoadCustomFont("Outline at 40 Material");
-                await LoadCustomFont("Outline at 40 Material Always On Top");
-                await LoadCustomFont("Outline at 90 Material");
+                await LoadAllFontVariants();
                 _harmony.PatchAll();
             }
             catch (Exception e)
@@ -132,6 +137,7 @@ public partial class Plugin : BaseUnityPlugin
         if (_fontAssetSystem.Fonts.ContainsKey(fullFontName))
         {
             // already loaded, don't bother
+            PatcherFunctions.UpdateCurrentFont();
             return;
         }
         
